@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.8.1（2026-10-23）—— 元数据补全（无功能变更）
+
+- **`Cargo.toml` 补 `repository` 字段**：crates.io 页面右上角终于出现
+  “Repository” 链接（0.8.0 发布时漏了这个字段，而版本一旦发布不能修改，
+  只能发新版本带上）。
+- README 顶部加 crates.io / docs.rs / license / CI 四枚徽章与仓库地址。
+- 仓库配套补齐：`.gitignore`、`.gitattributes`（统一 LF，避免跨平台整文件
+  diff）、`.github/workflows/ci.yml`（clippy `-D warnings` / 全例程构建 /
+  零依赖构建 / 单测 / fmt / doc 六步）、`LICENSE-MIT` + `LICENSE-APACHE`。
+- `.cargo/config.toml` 的芯片描述文件改为相对路径 `tools/CW32L0_Series.yaml`
+  （原先写死本机 `C:\Users\...\Downloads\` 绝对路径，换机器跑 `cargo run` 必挂），
+  该 YAML 随仓库提供。
+- `cargo fmt --all` 全量格式化；修掉 `btim.rs` / `gtim.rs` 两处
+  `manual_range_contains`，`cargo clippy --lib -- -D warnings` 归零。
+- **行为零变化**：寄存器编码、时序计算、例程输出与 0.8.0 完全一致。
+
 ## 0.8.0（2026-10-23）—— RTC 实时时钟 / FLASH 自编程
 
 - **RTC（`rtc`）**：BCD 日历（年月日周 + 时分秒，自动闰年、24 小时制）、
