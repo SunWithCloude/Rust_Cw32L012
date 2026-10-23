@@ -49,6 +49,7 @@ pub enum AtimChannel {
 
 /// PWM 配置错误
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum AtimError {
     /// 频率/占空比超出可实现范围
     OutOfRange,

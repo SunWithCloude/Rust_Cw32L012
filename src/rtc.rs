@@ -61,6 +61,7 @@ impl RtcClock {
 
 /// 日期时间（BCD 语义，字段是**十进制值**，模块内部转 BCD）
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DateTime {
     /// 年 0..=99（20xx）
     pub year: u8,
@@ -130,6 +131,7 @@ impl Alarm {
 
 /// RTC 错误
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum RtcError {
     /// 时钟源未就绪（LSE 未起振 / LSI 未稳定）
     ClockNotReady,

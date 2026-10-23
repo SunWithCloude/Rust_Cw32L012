@@ -102,6 +102,29 @@ Everything below has been run on real silicon — the numbers in
 - **Runtime (`runtime`, default feature)** — 48-entry vector table with weak
   symbols, `interrupt!` macro, NVIC control, PRIMASK critical sections. No
   `cortex-m-rt` required.
+- **Ecosystem traits** — `embedded-hal 1.0` (delay, digital, SPI bus + device,
+  I2C, PWM `SetDutyCycle`), `embedded-io` `Read` / `Write` for UART,
+  `defmt::Format` on every error type and the enums worth logging, and a
+  `critical-section` implementation backed by `PRIMASK` (nesting-safe: the
+  previous mask is read back and restored, so an inner critical section never
+  re-enables interrupts early).
+
+### Feature flags
+
+| Feature | Default | Adds |
+|---|---|---|
+| `runtime` | ✅ | Vector table, reset init (.data/.bss), `interrupt!` macro, NVIC control |
+| `ehal-1` | ✅ | `embedded-hal 1.0`: delay / digital / SPI (bus + device) / I2C / PWM |
+| `critical-section-impl` | — | `PRIMASK`-based `critical-section` implementation (single-core M0+) |
+| `embedded-io` | — | `embedded_io::Read` / `Write` for `Uart` (requires Rust 1.81+) |
+| `defmt` | — | `defmt::Format` derives for error types and key enums (requires Rust 1.81+) |
+
+Turn everything off (`default-features = false`) and the crate is back to **zero
+external dependencies**. Only one `critical-section` implementation may exist per
+binary — if you also use `cortex-m` with `critical-section-single-core`, drop ours.
+
+Note: the `defmt` feature only links when compiling for the target; defmt's
+sections are not usable in a host `cargo test` binary.
 
 ## Getting started
 
@@ -341,8 +364,9 @@ in the manual.
 
 - [x] PAC, clock tree, GPIO, UART, SPI, I2C, timers, ADC/DAC, DMA, RTC, flash
 - [x] `embedded-hal 1.0` traits, self-contained runtime
+- [x] Ecosystem: `critical-section`, `embedded-io`, `defmt` (v0.9)
 - [x] 32 examples verified on hardware
-- [ ] Upstream the target definition to probe-rs (`probe-rs/targets/CW32L0_Series.yaml`)
+- [x] probe-rs target support (upstreamed — `probe-rs 0.32+` ships `CW32L0 Series`)
 - [ ] `.bin` / `.hex` packaging script (`cargo-binutils`)
 - [ ] UART cross-wire validation
 - [ ] GitHub Actions hardware-in-the-loop job

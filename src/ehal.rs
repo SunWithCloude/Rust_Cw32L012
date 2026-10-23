@@ -286,3 +286,35 @@ impl embedded_hal::i2c::I2c for I2c<'_> {
         }
     }
 }
+
+// ============================ pwm ============================
+//
+// `SetDutyCycle` 要求占空比挂在类型上，所以先 `Gtim::pwm_pin(ch)` 取句柄。
+// 满量程固定 10000（万分比），上层驱动按 `max_duty_cycle()` 自行归一化，
+// 因此 `set_duty_cycle(u16::MAX)` 这类“写满”的调用会被夹到 100%。
+
+use crate::gtim::{PwmError, PwmPin};
+
+impl embedded_hal::pwm::Error for PwmError {
+    #[inline]
+    fn kind(&self) -> embedded_hal::pwm::ErrorKind {
+        // embedded-hal 1.0 的 pwm::ErrorKind 目前只有 Other
+        embedded_hal::pwm::ErrorKind::Other
+    }
+}
+
+impl embedded_hal::pwm::ErrorType for PwmPin<'_, '_> {
+    type Error = PwmError;
+}
+
+impl embedded_hal::pwm::SetDutyCycle for PwmPin<'_, '_> {
+    #[inline]
+    fn max_duty_cycle(&self) -> u16 {
+        PwmPin::max_duty(self)
+    }
+
+    #[inline]
+    fn set_duty_cycle(&mut self, duty: u16) -> Result<(), Self::Error> {
+        PwmPin::set_duty(self, duty.min(PwmPin::MAX_DUTY))
+    }
+}

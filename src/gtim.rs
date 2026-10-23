@@ -33,6 +33,7 @@ use crate::rcc::Rcc;
 /// PWM 通道
 #[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum PwmChannel {
     Ch1,
     Ch2,
@@ -42,6 +43,7 @@ pub enum PwmChannel {
 
 /// PWM 配置错误
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum PwmError {
     /// 频率/占空比超出可实现范围
     OutOfRange,
@@ -178,6 +180,60 @@ impl<'p> Gtim<'p> {
     /// 寄存器块原始访问
     pub fn regs(&mut self) -> &'p pac::Gtim {
         self.regs
+    }
+
+    /// 取出绑定到指定通道的 PWM 句柄
+    ///
+    /// 句柄独占借用定时器，因此天然保证“同一时刻只有一个通道在被改写”。
+    /// 它的主要用途是满足 `embedded_hal::pwm::SetDutyCycle`（该 trait 要求
+    /// 占空比挂在类型上，而不是方法的参数里）。
+    pub fn pwm_pin(&mut self, ch: PwmChannel) -> PwmPin<'_, 'p> {
+        PwmPin { tim: self, ch }
+    }
+}
+
+/// 绑定到固定通道的 PWM 句柄
+///
+/// 满量程固定为 `10000`（万分比），因此可以直接喂给 `embedded-hal` 的
+/// `SetDutyCycle`（它按 `max_duty_cycle()` 归一化）。
+pub struct PwmPin<'a, 'p> {
+    tim: &'a mut Gtim<'p>,
+    ch: PwmChannel,
+}
+
+impl<'a, 'p> PwmPin<'a, 'p> {
+    /// 满量程（万分比）
+    pub const MAX_DUTY: u16 = 10_000;
+
+    /// 本句柄绑定的通道
+    pub fn channel(&self) -> PwmChannel {
+        self.ch
+    }
+
+    /// 满量程值（`embedded_hal::pwm::SetDutyCycle::max_duty_cycle`）
+    pub fn max_duty(&self) -> u16 {
+        Self::MAX_DUTY
+    }
+
+    /// 设置占空比（万分比 0..=10000，下一更新周期生效）
+    pub fn set_duty(&mut self, duty_bp: u16) -> Result<(), PwmError> {
+        self.tim.set_duty(self.ch, duty_bp)
+    }
+
+    /// 读回当前占空比（万分比，由 CCR/ARR 反算）
+    pub fn duty(&self) -> u16 {
+        let (arr, _) = self.tim.period_config();
+        let ccr = self.tim.ccr(self.ch) as u32;
+        let period = arr as u32 + 1;
+        if period == 0 {
+            return 0;
+        }
+        ((ccr * 10_000) / period) as u16
+    }
+
+    /// 回到定时器本体
+    pub fn release(self) -> &'a mut Gtim<'p> {
+        self.tim
     }
 }
 

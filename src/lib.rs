@@ -63,11 +63,15 @@
 pub mod adc;
 pub mod atim;
 pub mod btim;
+#[cfg(feature = "critical-section-impl")]
+pub mod cs;
 pub mod dac;
 pub mod delay;
 pub mod dma;
 #[cfg(feature = "ehal-1")]
 pub mod ehal;
+#[cfg(feature = "embedded-io")]
+pub mod eio;
 pub mod flash;
 pub mod gpio;
 pub mod gtim;

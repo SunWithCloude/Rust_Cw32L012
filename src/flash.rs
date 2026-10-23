@@ -40,6 +40,7 @@ pub const FLASH_SIZE: u32 = 64 * 1024;
 
 /// FLASH 错误
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum FlashError {
     /// 页号越界（>= 128）
     BadPage,

@@ -42,6 +42,7 @@ pub struct WindowConfig {
 
 /// 喂狗错误
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum FeedError {
     /// 当前计数值仍在窗口值之上（喂得太早，真写会触发复位）
     TooEarly,

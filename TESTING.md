@@ -262,6 +262,45 @@ DST 前几字应为 `A5A5_0000, A5A4_0101, A5A7_0202, A5A6_0303…`
 其他要点：`ICR` 同样是 R1W0（写 0 清）；`write_page` = 擦除 + 从页首写；
 擦除触发用**字节写**（厂商写法），32 位写虽然也能触发但没必要冒险。
 
+### ecosystem（critical-section / PWM trait / embedded-io）— ⏳ 待上机
+
+零接线。验证 v0.9 的三条生态对接通路，结果全部落在 SRAM 起始处（32 字节）。
+
+```bash
+cargo build --target thumbv6m-none-eabi --release --example ecosystem \
+  --features critical-section-impl,embedded-io
+probe-rs download --probe 0483:3748 --protocol swd --chip CW32L012x8 \
+  target/thumbv6m-none-eabi/release/examples/ecosystem
+probe-rs reset  --probe 0483:3748 --protocol swd --chip CW32L012x8
+sleep 2 && probe-rs read b8 0x20000000 32 --probe 0483:3748 --protocol swd --chip CW32L012x8
+```
+
+符号布局（`nm | grep ' [bB] '` 实测）：
+
+| 地址 | 符号 | 类型 | 预期 |
+|---|---|---|---|
+| 0x20000000 | `IO_WRITTEN` | u16 | **16**（"cw32 eio ok\r\n" 长度） |
+| 0x20000002 | `PWM_MAX` | u16 | **10000** |
+| 0x20000004 | `CS_AFTER` | u32 | **0** |
+| 0x20000008 | `CS_BEFORE` | u32 | **0** |
+| 0x2000000C | `CS_INSIDE` | u32 | **1** |
+| 0x20000010 | `CS_NESTED` | u32 | **1**（嵌套里仍屏蔽） |
+| 0x20000014 | `PWM_25PCT` | u16 | **≈2500**（ARR=3999 → CCR=1000） |
+| 0x20000016 | `PWM_CLAMP` | u16 | **10000**（`u16::MAX` 被夹紧） |
+| 0x20000018 | `STAGE` | u32 | **3**（走完三步） |
+
+判定要点：
+
+- **`CS_BEFORE=0 / CS_INSIDE=1 / CS_AFTER=0`** 才说明 `mrs PRIMASK` + `cpsid i`
+  真的生效且恢复正确。若 `CS_AFTER=1`，说明 `release` 没把中断开回来（会表现为
+  `wfi` 永远睡死）；若 `CS_INSIDE=0`，说明汇编没生效、`critical-section` 只是摆设。
+- **`CS_NESTED` 必须也是 1**：内层拿到旧值 1，退出时不该 `cpsie i`。这是
+  “嵌套安全”的唯一直接证据。
+- `PWM_25PCT` 有 ±2 的量化误差（`CCR = (ARR+1)*2500/10000 = 1000`，
+  反算 `1000*10000/4000 = 2500`），不必卡死等值。
+- `IO_WRITTEN` 只是 trait 返回值，PA02 上确实有波形但没接东西；
+  要看真实字节请用 USB-TTL 接 PA02 收。
+
 ## 已知问题（复测时注意）
 
 ### ⚠ TS 内置温度传感器（本板个体异常，代码已证无错）

@@ -32,7 +32,34 @@ use crate::rcc::Rcc;
 
 /// UART 波特率计算错误（BRRI 为 0 或超出 16bit 范围）
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct BaudError;
+
+/// 接收错误（由 `ISR` 的四个错误标志解码，读取时按优先级取其一）
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub enum UartError {
+    /// 溢出：数据没被及时读走，接收缓冲已覆盖
+    Overrun,
+    /// 帧错误：停止位不对（波特率不匹配 / 线路干扰）
+    Framing,
+    /// 校验错
+    Parity,
+    /// 噪声：采样到毛刺
+    Noise,
+}
+
+impl core::fmt::Display for UartError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let s = match self {
+            UartError::Overrun => "receiver overrun (data lost)",
+            UartError::Framing => "framing error (baud rate mismatch?)",
+            UartError::Parity => "parity error",
+            UartError::Noise => "noise detected",
+        };
+        f.write_str(s)
+    }
+}
 
 /// 计算波特率分频：返回 `(BRRI, BRRF)`。
 ///
@@ -175,6 +202,27 @@ impl<'p> Uart<'p> {
     pub fn clear_errors(&mut self) {
         self.regs.icr.write(ub::ICR_CLEAR_RX_ERRORS);
         let _ = self.regs.rdr.read();
+    }
+
+    /// 解码并清除接收错误标志；无错误返回 `None`
+    ///
+    /// 多个标志同时挂起时按 **溢出 > 帧错 > 校验错 > 噪声** 的优先级返回其一
+    /// （溢出最严重：数据已经丢了，其余只是这一字节不可信）。
+    pub fn take_error(&mut self) -> Option<UartError> {
+        let f = self.error_flags();
+        if f == 0 {
+            return None;
+        }
+        self.clear_errors();
+        Some(if f & ub::ISR_ORE != 0 {
+            UartError::Overrun
+        } else if f & ub::ISR_FE != 0 {
+            UartError::Framing
+        } else if f & ub::ISR_PE != 0 {
+            UartError::Parity
+        } else {
+            UartError::Noise
+        })
     }
 
     /// 原始寄存器访问（逃生舱）

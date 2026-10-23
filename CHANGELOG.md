@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.9.0（2026-10-24）—— 生态对接：critical-section / embedded-io / defmt / PWM
+
+让 crate 从「能用」变成「能直接拿去写项目」：真实项目里最先卡住的从来不是外设，
+而是这些生态前置依赖。
+
+- **`critical-section` 实现**（新模块 `cs`，feature `critical-section-impl`）：
+  基于 `PRIMASK`，`acquire` 先读回旧掩码再 `cpsid i`，`release` 按旧值决定是否
+  `cpsie i`——**嵌套安全**，内层退出不会提前开中断。`embedded-hal-bus`、
+  总线共享封装、各类驱动与部分实时框架都要求上层提供这个实现，否则链接期
+  直接报 `no critical section implementation`。
+  （`critical-section` 显式选 `restore-state-u32`；一个固件只能有一个实现。）
+- **`embedded-io`**（新模块 `eio`，feature `embedded-io`）：`Uart` 实现
+  `Read` / `Write`。`read()` 阻塞到至少 1 字节、其余非阻塞填满；挂起的接收错误
+  先于数据上报，解码为新增的 `uart::UartError`（溢出 / 帧错 / 校验 / 噪声，
+  实现 `Display` 与 `core::error::Error`）。
+- **`defmt`**（feature `defmt`）：12 个模块的错误类型与关键枚举（通道、采样周期、
+  时钟源、电平、SPI 模式、`DateTime` 等）共 16 处 `defmt::Format` 派生，
+  日志里可以直接 `defmt::info!("{:?}", err)`。
+- **`embedded-hal::pwm::SetDutyCycle`**：`Gtim::pwm_pin(ch)` 取出绑定通道的
+  `PwmPin` 句柄，满量程 10000（万分比）；超过满量程的值按 100% 夹紧，兼容生态里
+  常见的 `set_duty_cycle(u16::MAX)` 写法。
+- **`Uart::take_error()`**：解码并清除 `ISR` 的四个接收错误标志，按
+  溢出 > 帧错 > 校验 > 噪声 的优先级返回其一（`read_byte` 仍保持自愈语义）。
+- **验证例程 `ecosystem`**（零接线）：一次上电同时验证 PRIMASK 前后值
+  （0→1→0、嵌套仍为 1）、`SetDutyCycle` 的 25% 与夹紧行为、`embedded_io::Write`
+  的返回字节数。
+- 文档：README 中英双版新增「Ecosystem traits」与 feature 开关表，路线图更新
+  （probe-rs 目标定义已随 0.32 上游内置，原「待提交上游」条目关闭）。
+
 ## 0.8.2（2026-10-23）—— README 改为英文（无代码变更）
 
 - `README.md` 全英文重写，作为 crates.io / docs.rs / GitHub 的默认展示文档；

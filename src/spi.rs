@@ -38,6 +38,7 @@ use crate::rcc::Rcc;
 /// SPI 时序模式（CPOL/CPHA 组合）
 #[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum SpiMode {
     /// CPOL=0, CPHA=0
     Mode0,
@@ -51,6 +52,7 @@ pub enum SpiMode {
 
 /// 数据位序
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum BitOrder {
     /// MSB 先行（默认）
     #[default]

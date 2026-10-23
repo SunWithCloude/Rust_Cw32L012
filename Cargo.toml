@@ -1,6 +1,6 @@
 [package]
 name = "cw32l012-hal"
-version = "0.8.2"
+version = "0.9.0"
 edition = "2021"
 rust-version = "1.60"
 description = "no_std HAL for the CW32L012 Cortex-M0+ low-power MCU (Wuhan Xinyuan / CMSemicon)"
@@ -13,16 +13,26 @@ documentation = "https://docs.rs/cw32l012-hal"
 exclude = ["firmware/*.bin", "firmware/*.hex"]
 
 [dependencies]
-# 生态兼容层（可选）：关掉后 crate 回到零外部依赖
+# 生态兼容层（全部可选）：一个都不开时 crate 回到零外部依赖
 embedded-hal = { version = "1.0", optional = true, default-features = false }
+critical-section = { version = "1.2", optional = true, default-features = false, features = ["restore-state-u32"] }
+defmt = { version = "1", optional = true }
+embedded-io = { version = "0.7", optional = true, default-features = false }
 
 [features]
 default = ["runtime", "ehal-1"]
 # 自包含运行时：中断向量表、复位初始化（.data 拷贝、.bss 清零）。
 # 实际代码仅在 target 为 `arm` + `none`（如 thumbv6m-none-eabi）时编译。
 runtime = []
-# embedded-hal 1.0 trait 实现（delay / digital / spi / i2c）
+# embedded-hal 1.0 trait 实现（delay / digital / spi / i2c / pwm）
 ehal-1 = ["dep:embedded-hal"]
+# 用 PRIMASK 关中断实现 critical-section（单核 M0+）。
+# 一个固件只能有一个实现：若同时依赖 cortex-m 并开了它的实现，会链接冲突。
+critical-section-impl = ["dep:critical-section"]
+# 错误类型与关键枚举实现 defmt::Format（需要 Rust 1.81+）
+defmt = ["dep:defmt"]
+# UART 的 embedded-io Read / Write（需要 Rust 1.81+）
+embedded-io = ["dep:embedded-io"]
 
 [[example]]
 name = "blink"
@@ -119,6 +129,10 @@ required-features = ["runtime"]
 [[example]]
 name = "clk_check"
 required-features = ["runtime"]
+
+[[example]]
+name = "ecosystem"
+required-features = ["runtime", "critical-section-impl", "embedded-io"]
 
 [profile.dev]
 panic = "abort"

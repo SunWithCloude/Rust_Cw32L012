@@ -33,6 +33,7 @@ use crate::rcc::Rcc;
 
 /// GPIO 端口号
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum PortId {
     /// 端口 A
     A,
@@ -58,6 +59,7 @@ impl PortId {
 
 /// 输出电平
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Level {
     /// 低电平
     Low,

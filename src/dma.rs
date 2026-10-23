@@ -234,6 +234,7 @@ impl Config {
 
 /// DMA 错误
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DmaError {
     /// 等待完成超时
     Timeout,

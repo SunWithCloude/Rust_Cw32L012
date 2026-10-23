@@ -47,6 +47,7 @@ const SCR_SLEEPDEEP: u32 = 1 << 2;
 
 /// 低功耗错误
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum PwrError {
     /// FLASH 忙（擦写进行中）或非读模式——手册 §3.3.1 禁止此时进入 DeepSleep
     FlashBusy,

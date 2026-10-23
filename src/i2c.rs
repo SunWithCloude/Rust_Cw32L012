@@ -108,6 +108,7 @@ pub fn calc_timing(pclk_hz: u32, speed: I2cSpeed) -> Result<Timing, TimingError>
 
 /// I2C 错误
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Error {
     /// 地址或数据被 NACK
     NoAcknowledge,

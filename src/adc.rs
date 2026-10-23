@@ -70,6 +70,7 @@ pub enum SampleCycles {
 
 /// 转换通道（表 25-4）
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum AdcChannel {
     /// 外部引脚 / 内部信号（0..=13，映射见模块文档）
     In(u8),
@@ -91,6 +92,7 @@ impl AdcChannel {
 
 /// ADC 错误
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum AdcError {
     /// 等待转换完成超时
     Timeout,

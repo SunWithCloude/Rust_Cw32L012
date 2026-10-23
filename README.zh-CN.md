@@ -24,7 +24,7 @@
 | 低功耗 | 多种低功耗模式，LPTIM / RTC / WWDT 唤醒源 |
 | 外设 | UART×3、SPI×3、I2C×2、ATIM/GTIM×4/BTIM×3/LPTIM、12 位 ADC×2、DAC、比较器×4、DMA×4、CORDIC、CRC/EAU |
 
-## 特性（v0.8.0）
+## 特性（v0.9.0）
 
 - **零负担生态兼容**：默认 feature `ehal-1` 提供 **embedded-hal 1.0** 全套
   trait（DelayNs / digital / SpiBus+SpiDevice / I2c），可直接对接生态驱动；
@@ -75,6 +75,10 @@
   必须置 `GPIOx_ANALOG.PINy=1`，否则数字输出驱动器会把模拟节点拉死（v0.6
   实机踩坑：PB00 未配模拟导致 OPA 输出被短路）
 - **运行时**（`runtime`，默认 feature）：48 项中断向量表（弱符号可覆盖）、`interrupt!` 宏、NVIC 门控、PRIMASK 临界区
+- **生态对接**（v0.9）：`embedded-hal 1.0` 的 delay / digital / SPI（总线 + 设备）/ I2C /
+  **PWM `SetDutyCycle`**、UART 的 `embedded-io` `Read`/`Write`、所有错误类型与常用枚举的
+  `defmt::Format`，以及基于 `PRIMASK` 的 `critical-section` 实现（读回旧掩码再恢复，
+  嵌套安全：内层退出不会提前开中断）
 
 ## VS Code 调试
 
@@ -118,6 +122,24 @@ cw32l012-hal/
     ├── uart_echo.rs         # UART1 回显（PA02/PA03，115200-8N1）
     └── tft_*.rs             # ST7789 TFT 屏幕系列例程（彩条/文字/诊断等 7 个）
 ```
+
+
+### Feature 开关
+
+| Feature | 默认 | 作用 |
+|---|---|---|
+| `runtime` | ✅ | 向量表、复位初始化（.data/.bss）、`interrupt!` 宏、NVIC |
+| `ehal-1` | ✅ | `embedded-hal 1.0`：delay / digital / SPI（总线 + 设备）/ I2C / PWM |
+| `critical-section-impl` | — | 基于 `PRIMASK` 的 `critical-section` 实现（单核 M0+） |
+| `embedded-io` | — | `Uart` 的 `embedded_io::Read` / `Write`（需 Rust 1.81+） |
+| `defmt` | — | 错误类型与关键枚举的 `defmt::Format`（需 Rust 1.81+） |
+
+全部关掉（`default-features = false`）即回到**零外部依赖**。一个固件只能有一个
+`critical-section` 实现——若同时用 `cortex-m` 的 `critical-section-single-core`，
+请去掉我们这个。
+
+注意：`defmt` feature 只在交叉编译到目标时能正常链接（defmt 的段在宿主机
+`cargo test` 里不可用）。
 
 ## 快速上手
 
@@ -392,6 +414,7 @@ FLASH 读等待周期（表 7-1：≤24MHz→0、≤48MHz→1、≤72MHz→2、�
 - [x] ADC 单次转换 + 内部温度/基准通道（v0.3：实板 VDDA/温度）
 - [x] GPIO 外部中断高层 API（v0.3：沿选择 + 数字滤波）
 - [x] embedded-hal 1.0 trait 实现（v0.3：默认 feature，可关回零依赖）
+- [x] 生态对接（v0.9：critical-section / embedded-io / defmt / PWM trait）
 - [x] FLASH 等待周期自动配置（v0.2：>24MHz 时钟安全切换，§4.5.2 流程）
 - [x] UART 溢出错误自愈 + 开漏输出（v0.2）
 - [x] GPIOx_PDR 下拉建模（v0.2.4：UM V1.4 §9.6.3，仅 PF3 实效）
