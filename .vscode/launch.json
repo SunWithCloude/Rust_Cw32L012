@@ -19,7 +19,9 @@
           "coreIndex": 0,
           "programBinary": "${workspaceFolder}/target/thumbv6m-none-eabi/release/examples/blink"
         }
-      ]
+      ],
+      "logFile": "${workspaceFolder}/.vscode/probe-rs-debug.log",
+      "consoleLogLevel": "Debug"
     },
     {
       "type": "probe-rs-debug",
@@ -33,7 +35,9 @@
         {
           "coreIndex": 0
         }
-      ]
+      ],
+      "logFile": "${workspaceFolder}/.vscode/probe-rs-debug.log",
+      "consoleLogLevel": "Debug"
     }
   ]
 }

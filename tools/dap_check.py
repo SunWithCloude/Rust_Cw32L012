@@ -130,6 +130,12 @@ else:
     print("launch ->", "success" if resp.get("success") else "失败: %s" % resp.get("message"))
 
 send(req("configurationDone", {}))
+if os.environ.get("DAP_RACE"):
+    send(req("next", {"threadId": 0}))
+    r, _ = wait_for(lambda m: m.get("type") == "response" and m.get("command") == "next", timeout=20)
+    print("race next ->", (r or {}).get("success"), "|", ((r or {}).get("message") or "").replace(chr(10), " ")[:200])
+    proc.kill()
+    raise SystemExit
 stopped, seen = wait_for(lambda m: m.get("type") == "event" and m.get("event") == "stopped", timeout=40)
 if stopped:
     print("stopped ->", json.dumps(stopped.get("body", {}), ensure_ascii=False)[:400])
@@ -144,6 +150,14 @@ if stopped:
             print("   frame:", f.get("name"), "| line", f.get("line"), "| pc", f.get("instructionPointerReference"))
 else:
     print("stopped -> 没等到")
+
+if tids:
+    send(req("next", {"threadId": tids[0]}))
+    r, _ = wait_for(lambda m: m.get("type") == "response" and m.get("command") == "next", timeout=25)
+    print("next ->", (r or {}).get("success"), "|", ((r or {}).get("message") or "")[:160])
+    send(req("continue", {"threadId": tids[0]}))
+    r2, _ = wait_for(lambda m: m.get("type") == "response" and m.get("command") == "continue", timeout=25)
+    print("continue ->", (r2 or {}).get("success"), "|", ((r2 or {}).get("message") or "")[:160])
 
 send(req("disconnect", {"terminateDebuggee": True}))
 time.sleep(1.0)
