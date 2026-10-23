@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.1（2026-10-24）—— docs.rs 改为全 feature 构建（无代码变更）
+
+0.9.0 发布后发现：docs.rs 默认只按**默认 feature** 构建，导致条件编译的
+`cs`（critical-section 实现）与 `eio`（embedded-io）两个模块在文档里整页缺失
+（`/cw32l012_hal/cs/index.html` 实测 404）。
+
+- `Cargo.toml` 增加 `[package.metadata.docs.rs] all-features = true`，
+  文档站现在会带上 `critical-section-impl` / `embedded-io` / `defmt` 下的全部条目
+- 本地 `cargo doc --no-deps --all-features` 零警告，`cs` / `eio` 页面正常生成
+- **无代码变更**，编译产物与 0.9.0 完全一致
+
 ## 0.9.0（2026-10-24）—— 生态对接：critical-section / embedded-io / defmt / PWM
 
 让 crate 从「能用」变成「能直接拿去写项目」：真实项目里最先卡住的从来不是外设，

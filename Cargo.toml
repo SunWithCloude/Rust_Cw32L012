@@ -1,6 +1,6 @@
 [package]
 name = "cw32l012-hal"
-version = "0.9.0"
+version = "0.9.1"
 edition = "2021"
 rust-version = "1.60"
 description = "no_std HAL for the CW32L012 Cortex-M0+ low-power MCU (Wuhan Xinyuan / CMSemicon)"
@@ -11,6 +11,11 @@ readme = "README.md"
 repository = "https://github.com/SunWithCloude/Rust_Cw32L012"
 documentation = "https://docs.rs/cw32l012-hal"
 exclude = ["firmware/*.bin", "firmware/*.hex"]
+
+[package.metadata.docs.rs]
+# docs.rs 默认只开默认 feature，那会让 cs / eio 两个模块整页缺失（实测 404）。
+# 这里让它按全 feature 构建，条件编译的模块才会出现在文档里。
+all-features = true
 
 [dependencies]
 # 生态兼容层（全部可选）：一个都不开时 crate 回到零外部依赖
