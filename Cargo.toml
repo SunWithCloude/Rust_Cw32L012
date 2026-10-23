@@ -1,6 +1,6 @@
 [package]
 name = "cw32l012-hal"
-version = "0.8.1"
+version = "0.8.2"
 edition = "2021"
 rust-version = "1.60"
 description = "no_std HAL for the CW32L012 Cortex-M0+ low-power MCU (Wuhan Xinyuan / CMSemicon)"
