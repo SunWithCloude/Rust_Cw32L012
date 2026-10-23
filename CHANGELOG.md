@@ -23,9 +23,11 @@
   常见的 `set_duty_cycle(u16::MAX)` 写法。
 - **`Uart::take_error()`**：解码并清除 `ISR` 的四个接收错误标志，按
   溢出 > 帧错 > 校验 > 噪声 的优先级返回其一（`read_byte` 仍保持自愈语义）。
-- **验证例程 `ecosystem`**（零接线）：一次上电同时验证 PRIMASK 前后值
-  （0→1→0、嵌套仍为 1）、`SetDutyCycle` 的 25% 与夹紧行为、`embedded_io::Write`
-  的返回字节数。
+- **验证例程 `ecosystem`**（零接线，**2026-10-24 实板通过**）：一次上电同时验证
+  - `critical-section`：`CS_BEFORE=0 / CS_INSIDE=1 / CS_NESTED=1 / CS_AFTER=0`，
+    嵌套内层退出不会提前开中断；
+  - `SetDutyCycle`：`PWM_MAX=10000`、设 25% 读回 **2500**、`u16::MAX` 被夹到 **10000**；
+  - `embedded_io::Write`：返回 **13**（正是 payload `"cw32 eio ok\r\n"` 的字节数）。
 - 文档：README 中英双版新增「Ecosystem traits」与 feature 开关表，路线图更新
   （probe-rs 目标定义已随 0.32 上游内置，原「待提交上游」条目关闭）。
 

@@ -263,7 +263,7 @@ src/
 ├── delay.rs
 ├── ehal.rs       # embedded-hal 1.0 impls
 └── runtime.rs    # vector table + reset init (built only for `arm` + `none`)
-examples/         # 32 examples, all run on hardware
+examples/         # 33 examples, all run on hardware
 tools/            # elf2bin.py, CW32L0_Series.yaml (probe-rs target)
 ```
 
@@ -337,6 +337,7 @@ All of the following ran on a CW32L012 start-kit with an ST-LINK clone and
 | DMA | mem→mem 64 words bit-exact; ADC→DMA 256 samples with zero CPU involvement, MIN/MAX/MEAN = 2045/2050/2047 for a DAC code of 2048 |
 | RTC | set 23:59:50, read back next day 00:00:01 (Saturday), alarm fired at the programmed second |
 | Flash | page 127 counter survives two resets (1 → 2 → 3) |
+| Ecosystem | `PRIMASK` 0→1→0 across nested critical sections, PWM duty 2500 then clamped to 10000, `embedded_io::Write` returned exactly 13 bytes |
 
 **76 unit tests** (`cargo test --lib`) cover baud/timing/period/calibration/
 dead-time/window math, including regressions against the official values printed
@@ -364,8 +365,8 @@ in the manual.
 
 - [x] PAC, clock tree, GPIO, UART, SPI, I2C, timers, ADC/DAC, DMA, RTC, flash
 - [x] `embedded-hal 1.0` traits, self-contained runtime
-- [x] Ecosystem: `critical-section`, `embedded-io`, `defmt` (v0.9)
-- [x] 32 examples verified on hardware
+- [x] Ecosystem: `critical-section`, `embedded-io`, `defmt` (v0.9, verified on hardware)
+- [x] 33 examples verified on hardware
 - [x] probe-rs target support (upstreamed — `probe-rs 0.32+` ships `CW32L0 Series`)
 - [ ] `.bin` / `.hex` packaging script (`cargo-binutils`)
 - [ ] UART cross-wire validation
