@@ -139,6 +139,7 @@ if os.environ.get("DAP_RACE"):
 stopped, seen = wait_for(lambda m: m.get("type") == "event" and m.get("event") == "stopped", timeout=40)
 if stopped:
     print("stopped ->", json.dumps(stopped.get("body", {}), ensure_ascii=False)[:400])
+    tids = []
     send(req("threads", {}))
     th, _ = wait_for(lambda m: m.get("type") == "response" and m.get("command") == "threads", timeout=15)
     tids = [t["id"] for t in (th or {}).get("body", {}).get("threads", [])]
@@ -158,6 +159,19 @@ if tids:
     send(req("continue", {"threadId": tids[0]}))
     r2, _ = wait_for(lambda m: m.get("type") == "response" and m.get("command") == "continue", timeout=25)
     print("continue ->", (r2 or {}).get("success"), "|", ((r2 or {}).get("message") or "")[:160])
+
+if os.environ.get("DAP_PAUSE"):
+    send(req("continue", {"threadId": 0}))
+    wait_for(lambda m: m.get("type") == "response" and m.get("command") == "continue", timeout=20)
+    time.sleep(3)
+    send(req("pause", {"threadId": 0}))
+    pr, _ = wait_for(lambda m: m.get("type") == "response" and m.get("command") == "pause", timeout=20)
+    print("pause ->", (pr or {}).get("success"), "|", ((pr or {}).get("message") or "")[:120])
+    st2, _ = wait_for(lambda m: m.get("type") == "event" and m.get("event") == "stopped", timeout=10)
+    print("pause 后 stopped ->", (st2 or {}).get("body", {}).get("reason"))
+    send(req("next", {"threadId": 0}))
+    n2, _ = wait_for(lambda m: m.get("type") == "response" and m.get("command") == "next", timeout=20)
+    print("pause 后 next ->", (n2 or {}).get("success"), "|", ((n2 or {}).get("message") or "").replace(chr(10)," ")[:120])
 
 send(req("disconnect", {"terminateDebuggee": True}))
 time.sleep(1.0)
