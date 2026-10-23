@@ -1,0 +1,41 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "probe-rs-debug",
+      "request": "launch",
+      "name": "probe-rs · blink (CW32L012)",
+      "preLaunchTask": "cargo build (blink)",
+      "chip": "CW32L012x8",
+      "chipDescriptionPath": "${workspaceFolder}/tools/CW32L0_Series.yaml",
+      "probe": "0483:3748",
+      "wireProtocol": "Swd",
+      "speed": 4000,
+      "flashingConfig": {
+        "flashingEnabled": true,
+        "haltAfterReset": true
+      },
+      "coreConfigs": [
+        {
+          "coreIndex": 0,
+          "programBinary": "${workspaceFolder}/target/thumbv6m-none-eabi/release/examples/blink"
+        }
+      ]
+    },
+    {
+      "type": "probe-rs-debug",
+      "request": "attach",
+      "name": "probe-rs · attach (当前固件)",
+      "chip": "CW32L012x8",
+      "chipDescriptionPath": "${workspaceFolder}/tools/CW32L0_Series.yaml",
+      "probe": "0483:3748",
+      "wireProtocol": "Swd",
+      "speed": 4000,
+      "coreConfigs": [
+        {
+          "coreIndex": 0
+        }
+      ]
+    }
+  ]
+}

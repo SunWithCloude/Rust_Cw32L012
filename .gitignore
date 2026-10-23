@@ -10,7 +10,9 @@
 
 # 本机工具配置（MCP / 编辑器）
 .mcp.json
-.vscode/
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
 .idea/
 
 # 系统垃圾

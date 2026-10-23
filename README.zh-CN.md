@@ -76,6 +76,20 @@
   实机踩坑：PB00 未配模拟导致 OPA 输出被短路）
 - **运行时**（`runtime`，默认 feature）：48 项中断向量表（弱符号可覆盖）、`interrupt!` 宏、NVIC 门控、PRIMASK 临界区
 
+## VS Code 调试
+
+装 **probe-rs** 扩展（`probe-rs.probe-rs-debugger`）。CW32L0 还不在 probe-rs
+内置目标列表里，所以 launch 配置要用 `chipDescriptionPath` 指向仓库自带的
+YAML——`.vscode/launch.json` 已经写好，按 **F5** 即可：自动编译、烧录、
+停在入口。断点、调用栈、变量、外设寄存器视图都可用。
+
+**Cortex-Debug 这个扩展对本芯片不可用**：它走 GDB，需要 `arm-none-eabi-gdb`
+加一个 GDB server（OpenOCD / ST-Link GDB server / J-Link），这三者都没有
+CW32L0 的目标定义。probe-rs 扩展直接说 DAP，不需要 GDB。
+
+`tools/dap_check.py` 是无界面自检脚本：拉起 `probe-rs dap-server`，发真实的
+DAP `initialize`/`launch`/`configurationDone`，最后打印解析到的调用栈帧。
+
 ## 目录结构
 
 ```text

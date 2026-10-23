@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "cargo build (blink)",
+      "type": "shell",
+      "command": "cargo",
+      "args": [
+        "build",
+        "--target",
+        "thumbv6m-none-eabi",
+        "--release",
+        "--example",
+        "blink"
+      ],
+      "group": "build",
+      "problemMatcher": ["$rustc"]
+    },
+    {
+      "label": "cargo build (当前打开的例程)",
+      "type": "shell",
+      "command": "cargo",
+      "args": [
+        "build",
+        "--target",
+        "thumbv6m-none-eabi",
+        "--release",
+        "--example",
+        "${input:exampleName}"
+      ],
+      "group": "build",
+      "problemMatcher": ["$rustc"]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "exampleName",
+      "type": "promptString",
+      "description": "例程名（examples/ 下的文件名，不带 .rs）",
+      "default": "tft_hw_spi"
+    }
+  ]
+}
