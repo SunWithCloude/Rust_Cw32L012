@@ -1,0 +1,14 @@
+# 交叉编译配置（thumbv6m-none-eabi = Cortex-M0+ 裸机）
+# 构建：cargo build --target thumbv6m-none-eabi --release --example blink
+# 运行：cargo run   --target thumbv6m-none-eabi --example blink
+#
+# 芯片描述文件用仓库自带的 tools/CW32L0_Series.yaml（由厂商 DFP 1.0.2 生成），
+# 不再依赖本机 Downloads 下的绝对路径，换机器也能直接用。
+# 探针不是 ST-Link（0483:3748）的话，按需改 --probe / --protocol。
+
+[target.thumbv6m-none-eabi]
+runner = "probe-rs run --probe 0483:3748 --protocol swd --chip CW32L012x8 --chip-description-path tools/CW32L0_Series.yaml --allow-erase-all"
+rustflags = [
+    "-C", "link-arg=-Tmemory.x",
+    "-C", "link-arg=-nmagic",
+]

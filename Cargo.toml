@@ -1,0 +1,133 @@
+[package]
+name = "cw32l012-hal"
+version = "0.8.0"
+edition = "2021"
+rust-version = "1.60"
+description = "no_std HAL for the CW32L012 Cortex-M0+ low-power MCU (Wuhan Xinyuan / CMSemicon)"
+categories = ["embedded", "hardware-support", "no-std"]
+keywords = ["cw32", "cw32l012", "hal", "cortex-m", "embedded"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/SunWithCloude/Rust_Cw32L012"
+documentation = "https://docs.rs/cw32l012-hal"
+exclude = ["firmware/*.bin", "firmware/*.hex"]
+
+[dependencies]
+# 生态兼容层（可选）：关掉后 crate 回到零外部依赖
+embedded-hal = { version = "1.0", optional = true, default-features = false }
+
+[features]
+default = ["runtime", "ehal-1"]
+# 自包含运行时：中断向量表、复位初始化（.data 拷贝、.bss 清零）。
+# 实际代码仅在 target 为 `arm` + `none`（如 thumbv6m-none-eabi）时编译。
+runtime = []
+# embedded-hal 1.0 trait 实现（delay / digital / spi / i2c）
+ehal-1 = ["dep:embedded-hal"]
+
+[[example]]
+name = "blink"
+required-features = ["runtime"]
+
+[[example]]
+name = "blink_pc13"
+required-features = ["runtime"]
+
+[[example]]
+name = "timer_blink"
+required-features = ["runtime"]
+
+[[example]]
+name = "adc_internal"
+required-features = ["runtime"]
+
+[[example]]
+name = "tft_hw_spi"
+required-features = ["runtime"]
+
+[[example]]
+name = "dac_adc_loop"
+required-features = ["runtime"]
+
+[[example]]
+name = "wdt_demo"
+required-features = ["runtime"]
+
+[[example]]
+name = "gtim_pwm"
+required-features = ["runtime"]
+
+[[example]]
+name = "atim_deadtime"
+required-features = ["runtime"]
+
+[[example]]
+name = "wwdt_demo"
+required-features = ["runtime"]
+
+[[example]]
+name = "low_power"
+required-features = ["runtime"]
+
+[[example]]
+name = "adc_sequence"
+required-features = ["runtime"]
+
+[[example]]
+name = "uart_echo"
+required-features = ["runtime"]
+
+[[example]]
+name = "ts_probe"
+required-features = ["runtime"]
+
+[[example]]
+name = "ts_probe2"
+required-features = ["runtime"]
+
+[[example]]
+name = "ts_probe3"
+required-features = ["runtime"]
+
+[[example]]
+name = "dma_demo"
+required-features = ["runtime"]
+
+[[example]]
+name = "rtc_demo"
+required-features = ["runtime"]
+
+[[example]]
+name = "flash_store"
+required-features = ["runtime"]
+
+[[example]]
+name = "lptim_deepsleep"
+required-features = ["runtime"]
+
+[[example]]
+name = "halltim_capture"
+required-features = ["runtime"]
+
+[[example]]
+name = "analog_loop"
+required-features = ["runtime"]
+
+[[example]]
+name = "delay_check"
+required-features = ["runtime"]
+
+[[example]]
+name = "clk_check"
+required-features = ["runtime"]
+
+[profile.dev]
+panic = "abort"
+# 嵌入式场景对时序敏感：-O0 下每次函数调用的固定开销可达数百周期
+# （实测 4MHz 时 delay_us(100) 偏长 2.2 倍），dev 也开尺寸优化。
+opt-level = "s"
+
+[profile.release]
+panic = "abort"
+opt-level = "s"
+lto = true
+codegen-units = 1

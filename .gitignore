@@ -1,0 +1,18 @@
+# 构建产物
+/target
+
+# 固件二进制（由 tools/elf2bin.py 从 elf 生成，不入库）
+*.bin
+*.hex
+*.elf
+*.map
+*.pdb
+
+# 本机工具配置（MCP / 编辑器）
+.mcp.json
+.vscode/
+.idea/
+
+# 系统垃圾
+.DS_Store
+Thumbs.db
