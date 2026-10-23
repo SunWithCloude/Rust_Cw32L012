@@ -185,10 +185,10 @@ cw32l012_hal::interrupt!("GPIOA_irq", gpioa_isr, {
 
 ## Debugging in VS Code
 
-Install the **probe-rs debugger** extension (`probe-rs.probe-rs-debugger`). The
-CW32L0 family is not in probe-rs's built-in target list yet, so the launch config
-points at the bundled YAML through `chipDescriptionPath`. `.vscode/launch.json`
-in this repository already has it:
+Install the **probe-rs debugger** extension (`probe-rs.probe-rs-debugger`).
+probe-rs **0.32 already ships CW32L0 target support** (`probe-rs chip list` shows
+`CW32L0 Series` with the `x8` variants), so nothing extra has to be configured.
+`.vscode/launch.json` in this repo has two configurations:
 
 ```jsonc
 {
@@ -196,7 +196,6 @@ in this repository already has it:
   "request": "launch",
   "name": "probe-rs · blink (CW32L012)",
   "chip": "CW32L012x8",
-  "chipDescriptionPath": "${workspaceFolder}/tools/CW32L0_Series.yaml",
   "probe": "0483:3748",
   "wireProtocol": "Swd",
   "flashingConfig": { "flashingEnabled": true, "haltAfterReset": true },
@@ -209,14 +208,22 @@ in this repository already has it:
 Press **F5**: it builds, flashes and halts at the entry point. Breakpoints, call
 stack, variables and the peripheral register view all work.
 
-**Cortex-Debug will not work for this chip.** That extension is GDB-based: it
-needs `arm-none-eabi-gdb` plus a GDB server (OpenOCD / ST-Link GDB server /
-J-Link), and none of them ship a CW32L0 target definition. The probe-rs
-extension speaks DAP directly and needs no GDB.
+Two things that cost us time:
+
+- **`wireProtocol` must be `Swd`.** Without it probe-rs falls back to JTAG and
+  fails with `JtagGetIdcodeError`.
+- **On probe-rs < 0.32** the chip is unknown; add
+  `"chipDescriptionPath": "${workspaceFolder}/tools/CW32L0_Series.yaml"`. The
+  generated target file is still shipped for that case (and for the CLI flag
+  `--chip-description-path`).
+- **Cortex-Debug will not work at all.** It is GDB-based and needs
+  `arm-none-eabi-gdb` plus a GDB server (OpenOCD / ST-Link GDB server / J-Link);
+  none of them ship a CW32L0 target definition. The probe-rs extension speaks
+  DAP directly and needs no GDB.
 
 `tools/dap_check.py` is a headless smoke test of the debug path (spawns
 `probe-rs dap-server`, sends a real DAP `initialize`/`launch`/`configurationDone`
-sequence and reports the resolved stack frame) — handy when the IDE misbehaves.
+sequence, prints the resolved stack frame) — handy when the IDE misbehaves.
 
 ## Crate layout
 

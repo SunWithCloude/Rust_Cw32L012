@@ -78,14 +78,20 @@
 
 ## VS Code 调试
 
-装 **probe-rs** 扩展（`probe-rs.probe-rs-debugger`）。CW32L0 还不在 probe-rs
-内置目标列表里，所以 launch 配置要用 `chipDescriptionPath` 指向仓库自带的
-YAML——`.vscode/launch.json` 已经写好，按 **F5** 即可：自动编译、烧录、
-停在入口。断点、调用栈、变量、外设寄存器视图都可用。
+装 **probe-rs** 扩展（`probe-rs.probe-rs-debugger`）。probe-rs **0.32 已内置
+CW32L0 支持**（`probe-rs chip list` 里能看到 `CW32L0 Series` 的 `x8` 三个型号），
+不需要额外配置任何文件。`.vscode/launch.json` 里有两套配置：launch（编译 →
+烧录 → 停在入口）与 attach（挂到正在跑的固件），按 **F5** 即可。
 
-**Cortex-Debug 这个扩展对本芯片不可用**：它走 GDB，需要 `arm-none-eabi-gdb`
-加一个 GDB server（OpenOCD / ST-Link GDB server / J-Link），这三者都没有
-CW32L0 的目标定义。probe-rs 扩展直接说 DAP，不需要 GDB。
+两个踩过的坑：
+
+- **`wireProtocol` 必须是 `Swd`**。不写的话 probe-rs 默认走 JTAG，报
+  `JtagGetIdcodeError`。
+- **probe-rs < 0.32** 不认识这颗芯片，需要加
+  `"chipDescriptionPath": "${workspaceFolder}/tools/CW32L0_Series.yaml"`；
+  仓库里的目标文件就是为这种情况（以及 CLI 的 `--chip-description-path`）留的。
+- **Cortex-Debug 完全不可用**：它走 GDB，需要 `arm-none-eabi-gdb` 加 GDB server，
+  这三者都没有 CW32L0 的目标定义。
 
 `tools/dap_check.py` 是无界面自检脚本：拉起 `probe-rs dap-server`，发真实的
 DAP `initialize`/`launch`/`configurationDone`，最后打印解析到的调用栈帧。

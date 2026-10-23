@@ -95,7 +95,7 @@ print("initialize ->", "ok" if resp and resp.get("success") else ("失败: %s" %
 caps = (resp or {}).get("body", {})
 print("  supportsConfigurationDoneRequest =", caps.get("supportsConfigurationDoneRequest"))
 
-send(req("launch", {
+launch_args = {
     "type": "probe-rs-debug",
     "request": "launch",
     "chip": "CW32L012x8",
@@ -106,8 +106,15 @@ send(req("launch", {
     "flashingConfig": {"flashingEnabled": True, "haltAfterReset": True},
     "coreConfigs": [{"coreIndex": 0, "programBinary": PROGRAM}],
     "cwd": ROOT,
-}))
-resp, seen = wait_for(lambda m: m.get("type") == "response" and m.get("command") == "launch", timeout=60)
+}
+if os.environ.get("DAP_NO_YAML"):
+    launch_args.pop("chipDescriptionPath")
+if os.environ.get("DAP_ATTACH"):
+    launch_args["request"] = "attach"
+    launch_args.pop("flashingConfig", None)
+    launch_args["coreConfigs"] = [{"coreIndex": 0}]
+send(req("launch", launch_args))
+resp, seen = wait_for(lambda m: m.get("type") == "response" and m.get("command") in ("launch", "attach"), timeout=60)
 for m in seen:
     t = m.get("type")
     if t == "event":
