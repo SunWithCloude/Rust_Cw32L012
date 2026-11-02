@@ -514,7 +514,7 @@ impl Rcc {
         self
     }
 
-    /// 使能 DMA 控制器时钟（**AHBEN[0]**，§4.7.12）
+    /// 使能 DMA 控制器时钟（**AHBEN[0]**，§4.7.11）
     pub fn enable_dma(&mut self) -> &mut Self {
         self.set_bits(&self.regs.ahben, sc::AHBEN_DMA);
         self
