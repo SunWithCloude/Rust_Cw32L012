@@ -139,6 +139,10 @@ required-features = ["runtime"]
 name = "ecosystem"
 required-features = ["runtime", "critical-section-impl", "embedded-io"]
 
+[[example]]
+name = "uart_link"
+required-features = ["runtime"]
+
 [profile.dev]
 panic = "abort"
 # 嵌入式场景对时序敏感：-O0 下每次函数调用的固定开销可达数百周期

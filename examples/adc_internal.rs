@@ -20,11 +20,23 @@ use cw32l012_hal::{
 };
 
 /// 最近一次 VDDA 测量（mV）
-static mut VDDA_MV: u32 = 0;
+// #[used] + #[no_mangle]: debug 构建下 LLVM 会把地址未逃逸的内部 static
+// 优化进寄存器（符号表直接消失），探针读数就没了锚点——锁住符号。
+#[used]
+#[no_mangle]
+pub static mut VDDA_MV: u32 = 0;
 /// 最近一次温度测量（毫摄氏度）
-static mut TEMP_MC: i32 = 0;
+#[used]
+#[no_mangle]
+pub static mut TEMP_MC: i32 = 0;
+/// 最近一次温度测量错误码（0=无错误；1=Timeout 2=BadCalibration 3=UnsupportedChannel 4=SensorDead）
+#[used]
+#[no_mangle]
+pub static mut TEMP_ERR: u32 = 0;
 /// 测量轮数
-static mut SAMPLES: u32 = 0;
+#[used]
+#[no_mangle]
+pub static mut SAMPLES: u32 = 0;
 
 #[no_mangle]
 fn main() -> ! {
@@ -49,8 +61,12 @@ fn main() -> ! {
             if let Ok(mv) = adc.vdda_mv() {
                 VDDA_MV = mv;
             }
-            if let Some(t) = adc.temperature_mc().ok() {
-                TEMP_MC = t;
+            match adc.temperature_mc() {
+                Ok(t) => {
+                    TEMP_MC = t;
+                    TEMP_ERR = 0;
+                }
+                Err(e) => TEMP_ERR = e as u32,
             }
             SAMPLES += 1;
         }
