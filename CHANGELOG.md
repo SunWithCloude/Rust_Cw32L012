@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.9.2（2026-11-04）—— 观测符号修复 + UART 对夹工具
+
+一个「让实验可复现」的小版本：库代码没动，改的是**观察手段**。
+
+- `examples/adc_internal`：三个观测量 `VDDA_MV` / `TEMP_MC` / `SAMPLES` 加
+  `#[used]` + `#[no_mangle]`。debug 构建下 LLVM 会把「取了地址但地址没逃逸」
+  的内部 static 优化进寄存器，符号表里直接消失，probe-rs 读数就没有锚点。
+- `examples/adc_internal`：新增 `TEMP_ERR` 错误码
+  （0=无错 / 1=Timeout / 2=BadCalibration / 3=UnsupportedChannel / 4=SensorDead），
+  把 `temperature_mc()` 的 `Err` 分支从「静默丢弃」变成可观测——上一轮确认
+  TS 恒 0 时缺的正是这一环。
+- `examples/uart_link`（新增）：PA02/PA03 与 CH340X 的逐字节回显，统计量
+  （BRR 实测值、收发计数、接收错误数、最后一字节）写进 `repr(C)` 固定布局的
+  SRAM 块，供上位机按 6 个 u32 解码。
+- `tools/uart_link_test.py`（新增）：上位机脚本，读 banner、发 0x00..0xFF
+  pattern 逐字节比对回显、再用 probe-rs 读回统计量。
+  **固件与脚本均已编译/语法通过，CH340 尚未接到板子上实测。**
+- `src/rcc.rs`：AHBEN 处的注释引用改为 UM 4.7.11（4.7.12 实际是 APBEN1 节）。
+- **库代码零变更**，API 与 0.9.1 完全兼容；76 项单测（带可选 feature 78 项）全绿。
+
 ## 0.9.1（2026-10-24）—— docs.rs 改为全 feature 构建（无代码变更）
 
 0.9.0 发布后发现：docs.rs 默认只按**默认 feature** 构建，导致条件编译的
